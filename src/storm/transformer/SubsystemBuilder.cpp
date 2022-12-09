@@ -231,5 +231,12 @@ template SubsystemBuilderReturnType<storm::RationalFunction> buildSubsystem(stor
                                                                             storm::storage::BitVector const& subsystemActions,
                                                                             bool keepUnreachableStates = true,
                                                                             SubsystemBuilderOptions options = SubsystemBuilderOptions());
+
+template SubsystemBuilderReturnType<storm::storage::TriangularFuzzyNumber> buildSubsystem(storm::models::sparse::Model<storm::storage::TriangularFuzzyNumber> const& originalModel,
+                                                                            storm::storage::BitVector const& subsystemStates,
+                                                                            storm::storage::BitVector const& subsystemActions,
+                                                                            bool keepUnreachableStates = true,
+                                                                            SubsystemBuilderOptions options = SubsystemBuilderOptions());
+
 }  // namespace transformer
 }  // namespace storm

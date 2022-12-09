@@ -4,6 +4,7 @@
 #include "storm/exceptions/NotImplementedException.h"
 #include "storm/models/sparse/StandardRewardModel.h"
 #include "storm/utility/constants.h"
+#include "storm/storage/TriangularFuzzyNumber.h"
 
 namespace storm {
 namespace models {
@@ -48,6 +49,7 @@ template class Dtmc<double>;
 
 #ifdef STORM_HAVE_CARL
 template class Dtmc<storm::RationalNumber>;
+template class Dtmc<storm::storage::TriangularFuzzyNumber>;
 
 template class Dtmc<double, storm::models::sparse::StandardRewardModel<storm::Interval>>;
 template class Dtmc<storm::RationalFunction>;

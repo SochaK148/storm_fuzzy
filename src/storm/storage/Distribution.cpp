@@ -9,6 +9,7 @@
 
 #include "storm/adapters/RationalFunctionAdapter.h"
 #include "storm/exceptions/NotSupportedException.h"
+#include "storm/storage/TriangularFuzzyNumber.h"
 
 namespace storm {
 namespace storage {
@@ -222,5 +223,8 @@ template std::ostream& operator<<(std::ostream& out, Distribution<storm::Rationa
 template class Distribution<storm::RationalFunction, uint_fast64_t>;
 template std::ostream& operator<<(std::ostream& out, Distribution<storm::RationalFunction, uint_fast64_t> const& distribution);
 #endif
+
+template class Distribution<storm::storage::TriangularFuzzyNumber, unsigned long>;
+
 }  // namespace storage
 }  // namespace storm

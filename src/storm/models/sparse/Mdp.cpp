@@ -47,6 +47,8 @@ template class Mdp<storm::RationalNumber>;
 
 template class Mdp<double, storm::models::sparse::StandardRewardModel<storm::Interval>>;
 template class Mdp<storm::RationalFunction>;
+
+template class Mdp<storm::storage::TriangularFuzzyNumber, storm::models::sparse::StandardRewardModel<storm::storage::TriangularFuzzyNumber> >;
 }  // namespace sparse
 }  // namespace models
 }  // namespace storm

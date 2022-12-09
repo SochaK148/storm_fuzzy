@@ -12,6 +12,7 @@
 #include "storm/utility/builder.h"
 #include "storm/utility/constants.h"
 #include "storm/utility/macros.h"
+#include "storm/storage/TriangularFuzzyNumber.h"
 
 #include "storm/exceptions/InvalidOperationException.h"
 
@@ -555,6 +556,7 @@ storm::storage::MemoryStructure const& SparseModelMemoryProduct<ValueType, Rewar
 
 template class SparseModelMemoryProduct<double>;
 template class SparseModelMemoryProduct<double, storm::models::sparse::StandardRewardModel<storm::Interval>>;
+template class SparseModelMemoryProduct<TriangularFuzzyNumber, storm::models::sparse::StandardRewardModel<TriangularFuzzyNumber>>;
 template class SparseModelMemoryProduct<storm::RationalNumber>;
 template class SparseModelMemoryProduct<storm::RationalFunction>;
 

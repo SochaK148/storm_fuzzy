@@ -4,6 +4,7 @@
 #include "storm/io/export.h"
 #include "storm/models/sparse/StandardRewardModel.h"
 #include "storm/utility/constants.h"
+#include "storm/storage/TriangularFuzzyNumber.h"
 
 namespace storm {
 namespace models {
@@ -63,6 +64,7 @@ void DeterministicModel<ValueType, RewardModelType>::writeDotToStream(std::ostre
 template class DeterministicModel<double>;
 #ifdef STORM_HAVE_CARL
 template class DeterministicModel<storm::RationalNumber>;
+template class DeterministicModel<storm::storage::TriangularFuzzyNumber>;
 
 template class DeterministicModel<double, storm::models::sparse::StandardRewardModel<storm::Interval>>;
 template class DeterministicModel<storm::RationalFunction>;

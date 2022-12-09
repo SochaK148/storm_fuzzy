@@ -154,6 +154,8 @@ template class Pomdp<storm::RationalNumber>;
 template class Pomdp<double, storm::models::sparse::StandardRewardModel<storm::Interval>>;
 template class Pomdp<storm::RationalFunction>;
 
+template class Pomdp<storm::storage::TriangularFuzzyNumber, storm::models::sparse::StandardRewardModel<storm::storage::TriangularFuzzyNumber> >;
+
 }  // namespace sparse
 }  // namespace models
 }  // namespace storm

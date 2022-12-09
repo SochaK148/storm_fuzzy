@@ -5,6 +5,7 @@
 #include "storm/adapters/JsonAdapter.h"
 #include "storm/exceptions/NotImplementedException.h"
 #include "storm/utility/macros.h"
+#include "storm/storage/TriangularFuzzyNumber.h"
 
 namespace storm {
 namespace storage {
@@ -382,6 +383,7 @@ void Scheduler<ValueType>::printJsonToStream(std::ostream& out, std::shared_ptr<
 template class Scheduler<double>;
 template class Scheduler<storm::RationalNumber>;
 template class Scheduler<storm::RationalFunction>;
+template class Scheduler<TriangularFuzzyNumber>;
 
 }  // namespace storage
 }  // namespace storm

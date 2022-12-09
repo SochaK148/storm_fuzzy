@@ -6,6 +6,7 @@
 #include "storm/settings/modules/GeneralSettings.h"
 #include "storm/utility/NumberTraits.h"
 #include "storm/utility/constants.h"
+#include "storm/storage/TriangularFuzzyNumber.h"
 
 namespace storm {
 namespace utility {
@@ -108,6 +109,7 @@ template class ConstantsComparator<GmpRationalNumber>;
 template class ConstantsComparator<RationalFunction>;
 template class ConstantsComparator<Polynomial>;
 template class ConstantsComparator<Interval>;
+template class ConstantsComparator<storm::storage::TriangularFuzzyNumber>;
 #endif
 }  // namespace utility
 }  // namespace storm

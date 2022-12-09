@@ -68,6 +68,8 @@ template class StochasticTwoPlayerGame<storm::RationalFunction>;
 template class StochasticTwoPlayerGame<storm::RationalNumber>;
 #endif
 
+template class StochasticTwoPlayerGame<storm::storage::TriangularFuzzyNumber, storm::models::sparse::StandardRewardModel<storm::storage::TriangularFuzzyNumber> >;
+
 }  // namespace sparse
 }  // namespace models
 }  // namespace storm

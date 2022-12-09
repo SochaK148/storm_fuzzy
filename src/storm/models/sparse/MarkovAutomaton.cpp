@@ -13,6 +13,7 @@
 #include "storm/utility/graph.h"
 #include "storm/utility/macros.h"
 #include "storm/utility/vector.h"
+#include "storm/storage/TriangularFuzzyNumber.h"
 
 #include "storm/exceptions/InvalidArgumentException.h"
 
@@ -261,6 +262,7 @@ template class MarkovAutomaton<double>;
 #ifdef STORM_HAVE_CARL
 
 template class MarkovAutomaton<storm::RationalNumber>;
+template class MarkovAutomaton<storm::storage::TriangularFuzzyNumber, storm::models::sparse::StandardRewardModel<storm::storage::TriangularFuzzyNumber>>;
 
 template class MarkovAutomaton<double, storm::models::sparse::StandardRewardModel<storm::Interval>>;
 

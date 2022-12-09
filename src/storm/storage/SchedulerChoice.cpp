@@ -6,6 +6,7 @@
 #include "storm/adapters/RationalFunctionAdapter.h"
 #include "storm/adapters/RationalNumberAdapter.h"
 #include "storm/exceptions/InvalidOperationException.h"
+#include "storm/storage/TriangularFuzzyNumber.h"
 
 namespace storm {
 namespace storage {
@@ -73,6 +74,8 @@ template class SchedulerChoice<storm::RationalNumber>;
 template std::ostream& operator<<(std::ostream& out, SchedulerChoice<storm::RationalNumber> const& schedulerChoice);
 template class SchedulerChoice<storm::RationalFunction>;
 template std::ostream& operator<<(std::ostream& out, SchedulerChoice<storm::RationalFunction> const& schedulerChoice);
+
+template class SchedulerChoice<storm::storage::TriangularFuzzyNumber>;
 
 }  // namespace storage
 }  // namespace storm

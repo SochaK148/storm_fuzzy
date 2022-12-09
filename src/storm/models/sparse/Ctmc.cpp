@@ -98,6 +98,7 @@ template class Ctmc<storm::RationalNumber>;
 template class Ctmc<double, storm::models::sparse::StandardRewardModel<storm::Interval>>;
 template class Ctmc<storm::RationalFunction>;
 #endif
+template class Ctmc<storm::storage::TriangularFuzzyNumber, storm::models::sparse::StandardRewardModel<storm::storage::TriangularFuzzyNumber> >;
 }  // namespace sparse
 }  // namespace models
 }  // namespace storm

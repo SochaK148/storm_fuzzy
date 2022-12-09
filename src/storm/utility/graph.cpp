@@ -1987,6 +1987,16 @@ template storm::storage::BitVector performProbGreater0A(storm::storage::SparseMa
 template storm::storage::BitVector performProb0E(
     storm::models::sparse::NondeterministicModel<double, storm::models::sparse::StandardRewardModel<double>> const& model,
     storm::storage::SparseMatrix<double> const& backwardTransitions, storm::storage::BitVector const& phiStates, storm::storage::BitVector const& psiStates);
+
+template storm::storage::BitVector performProb0E(
+    storm::models::sparse::NondeterministicModel<storm::storage::TriangularFuzzyNumber, storm::models::sparse::StandardRewardModel<storm::storage::TriangularFuzzyNumber> > const& model,
+    storm::storage::SparseMatrix<storm::storage::TriangularFuzzyNumber> const& backwardTransitions, storm::storage::BitVector const& phiStates, storm::storage::BitVector const& psiStates);
+
+template storm::storage::BitVector getReachableStates(storm::storage::SparseMatrix<storm::storage::TriangularFuzzyNumber> const& transitionMatrix,
+                                                      storm::storage::BitVector const& initialStates, storm::storage::BitVector const& constraintStates,
+                                                      storm::storage::BitVector const& targetStates, bool useStepBound, uint_fast64_t maximalSteps,
+                                                      boost::optional<storm::storage::BitVector> const& choiceFilter);
+
 #ifdef STORM_HAVE_CARL
 template storm::storage::BitVector performProb0E(
     storm::models::sparse::NondeterministicModel<double, storm::models::sparse::StandardRewardModel<storm::Interval>> const& model,

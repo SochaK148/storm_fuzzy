@@ -1,6 +1,7 @@
 #pragma once
 
 #include "storm/adapters/RationalFunctionAdapter.h"
+#include "storm/storage/TriangularFuzzyNumber.h"
 
 namespace storm {
 template<typename ValueType>
@@ -42,4 +43,11 @@ struct NumberTraits<storm::RationalFunction> {
     static const bool SupportsExponential = false;
     static const bool IsExact = true;
 };
+
+template<>
+struct NumberTraits<storm::storage::TriangularFuzzyNumber> {
+    static const bool SupportsExponential = false;
+    static const bool IsExact = false;
+};
+
 }  // namespace storm

@@ -5,6 +5,7 @@
 #include "storm/storage/sparse/StateType.h"
 
 #include "storm/storage/BitVector.h"
+#include "storm/storage/TriangularFuzzyNumber.h"
 #include "storm/utility/ConstantsComparator.h"
 #include "storm/utility/constants.h"
 #include "storm/utility/vector.h"
@@ -2699,6 +2700,16 @@ template std::vector<storm::Interval> SparseMatrix<Interval>::getPointwiseProduc
 template bool SparseMatrix<storm::Interval>::isSubmatrixOf(SparseMatrix<storm::Interval> const& matrix) const;
 
 template bool SparseMatrix<storm::Interval>::isSubmatrixOf(SparseMatrix<double> const& matrix) const;
+
+
+// Triangular fuzzy numbers
+template class SparseMatrixBuilder<TriangularFuzzyNumber>;
+template class SparseMatrix<TriangularFuzzyNumber>;
+template std::ostream& operator<<(std::ostream& out, SparseMatrix<TriangularFuzzyNumber> const& matrix);
+template bool SparseMatrix<TriangularFuzzyNumber>::isSubmatrixOf(SparseMatrix<TriangularFuzzyNumber> const& matrix) const;
+template storm::storage::TriangularFuzzyNumber SparseMatrix<storm::storage::TriangularFuzzyNumber>::getPointwiseProductRowSum(
+    storm::storage::SparseMatrix<storm::storage::TriangularFuzzyNumber> const& otherMatrix, unsigned long const& row) const;
+template std::vector<TriangularFuzzyNumber>  SparseMatrix<TriangularFuzzyNumber>::getPointwiseProductRowSumVector<storm::storage::TriangularFuzzyNumber, storm::storage::TriangularFuzzyNumber>(storm::storage::SparseMatrix<storm::storage::TriangularFuzzyNumber> const&) const;
 #endif
 
 }  // namespace storage

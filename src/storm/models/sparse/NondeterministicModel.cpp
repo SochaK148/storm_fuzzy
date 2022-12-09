@@ -9,6 +9,7 @@
 #include "storm/storage/memorystructure/MemoryStructureBuilder.h"
 #include "storm/storage/memorystructure/SparseModelMemoryProduct.h"
 #include "storm/transformer/SubsystemBuilder.h"
+#include "storm/storage/TriangularFuzzyNumber.h"
 
 namespace storm {
 namespace models {
@@ -191,6 +192,7 @@ template class NondeterministicModel<double>;
 
 #ifdef STORM_HAVE_CARL
 template class NondeterministicModel<storm::RationalNumber>;
+template class NondeterministicModel<storm::storage::TriangularFuzzyNumber, storm::models::sparse::StandardRewardModel<storm::storage::TriangularFuzzyNumber> >;
 template class NondeterministicModel<double, storm::models::sparse::StandardRewardModel<storm::Interval>>;
 template class NondeterministicModel<storm::RationalFunction>;
 #endif

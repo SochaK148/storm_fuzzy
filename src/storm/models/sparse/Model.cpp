@@ -12,6 +12,7 @@
 #include "storm/models/sparse/StandardRewardModel.h"
 #include "storm/utility/NumberTraits.h"
 #include "storm/utility/vector.h"
+#include "storm/storage/TriangularFuzzyNumber.h"
 
 #include "storm/exceptions/NotImplementedException.h"
 
@@ -713,6 +714,7 @@ template class Model<double>;
 
 #ifdef STORM_HAVE_CARL
 template class Model<storm::RationalNumber>;
+template class Model<storm::storage::TriangularFuzzyNumber>;
 
 template class Model<double, storm::models::sparse::StandardRewardModel<storm::Interval>>;
 template class Model<storm::RationalFunction>;

@@ -14,6 +14,7 @@
 
 #include "storm/exceptions/NotSupportedException.h"
 #include "storm/utility/macros.h"
+#include "storm/storage/TriangularFuzzyNumber.h"
 
 namespace storm {
 namespace utility {
@@ -786,6 +787,11 @@ GmpRationalNumber convertNumber(RationalFunction const& number) {
 #endif
 
 template<>
+GmpRationalNumber convertNumber(storm::storage::TriangularFuzzyNumber const& number) {
+    return convertNumber<GmpRationalNumber>(number.getPeak());
+}
+
+template<>
 carl::uint convertNumber(RationalFunction const& func) {
     return carl::toInt<carl::uint>(convertNumber<RationalFunctionCoefficient>(func));
 }
@@ -904,8 +910,14 @@ std::string to_string(RationalFunction const& f) {
     }
     return ss.str();
 }
-
 #endif
+
+template<>
+std::string to_string(storm::storage::TriangularFuzzyNumber const& f) {
+    std::stringstream ss;
+    ss << "(" << f.getLeftBound() << "/" << f.getPeak() << "/" << f.getRightBound() << ")";
+    return ss.str();
+}
 
 template<>
 double convertNumber(std::string const& value) {
@@ -1070,6 +1082,20 @@ template bool isZero(Interval const& value);
 template bool isConstant(Interval const& value);
 template bool isInfinity(Interval const& value);
 #endif
+
+// Instantiations for TFNs.
+template storm::storage::TriangularFuzzyNumber one();
+template storm::storage::TriangularFuzzyNumber zero();
+template bool isOne(storm::storage::TriangularFuzzyNumber const& value);
+template bool isZero(storm::storage::TriangularFuzzyNumber const& value);
+template bool isConstant(storm::storage::TriangularFuzzyNumber const& value);
+template bool isInfinity(storm::storage::TriangularFuzzyNumber const& value);
+
+template<>
+int convertNumber(storm::storage::TriangularFuzzyNumber const& number) {
+    STORM_LOG_THROW(false, storm::exceptions::InvalidArgumentException, "Conversion from fuzzy number is not defined.");
+
+}
 
 }  // namespace utility
 }  // namespace storm

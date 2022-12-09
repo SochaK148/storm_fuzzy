@@ -83,6 +83,7 @@ template class Smg<storm::RationalNumber>;
 
 template class Smg<double, storm::models::sparse::StandardRewardModel<storm::Interval>>;
 template class Smg<storm::RationalFunction>;
+template class Smg<storm::storage::TriangularFuzzyNumber, storm::models::sparse::StandardRewardModel<storm::storage::TriangularFuzzyNumber> >;
 }  // namespace sparse
 }  // namespace models
 }  // namespace storm

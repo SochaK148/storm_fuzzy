@@ -5,6 +5,7 @@
 #include "storm/exceptions/InvalidOperationException.h"
 
 #include "storm/adapters/RationalFunctionAdapter.h"
+#include "storm/storage/TriangularFuzzyNumber.h"
 
 namespace storm {
 namespace models {
@@ -582,6 +583,38 @@ template void StandardRewardModel<storm::Interval>::reduceToStateBasedRewards(st
 template class StandardRewardModel<storm::Interval>;
 template std::ostream& operator<< <storm::Interval>(std::ostream& out, StandardRewardModel<storm::Interval> const& rewardModel);
 #endif
+
+template std::vector<storm::storage::TriangularFuzzyNumber> StandardRewardModel<storm::storage::TriangularFuzzyNumber>::getTotalRewardVector(
+    uint_fast64_t numberOfRows, storm::storage::SparseMatrix<storm::storage::TriangularFuzzyNumber> const& transitionMatrix, storm::storage::BitVector const& filter) const;
+template std::vector<storm::storage::TriangularFuzzyNumber> StandardRewardModel<storm::storage::TriangularFuzzyNumber>::getTotalRewardVector(
+    storm::storage::SparseMatrix<storm::storage::TriangularFuzzyNumber> const& transitionMatrix) const;
+template std::vector<storm::storage::TriangularFuzzyNumber> StandardRewardModel<storm::storage::TriangularFuzzyNumber>::getTotalRewardVector(
+    storm::storage::SparseMatrix<storm::storage::TriangularFuzzyNumber> const& transitionMatrix, std::vector<storm::storage::TriangularFuzzyNumber> const& weights) const;
+template storm::storage::BitVector StandardRewardModel<storm::storage::TriangularFuzzyNumber>::getStatesWithZeroReward(
+    storm::storage::SparseMatrix<storm::storage::TriangularFuzzyNumber> const& transitionMatrix) const;
+template storm::storage::BitVector StandardRewardModel<storm::storage::TriangularFuzzyNumber>::getStatesWithFilter(
+    storm::storage::SparseMatrix<storm::storage::TriangularFuzzyNumber> const& transitionMatrix, std::function<bool(storm::storage::TriangularFuzzyNumber const&)> const& filter) const;
+template storm::storage::BitVector StandardRewardModel<storm::storage::TriangularFuzzyNumber>::getChoicesWithZeroReward(
+    storm::storage::SparseMatrix<storm::storage::TriangularFuzzyNumber> const& transitionMatrix) const;
+template storm::storage::BitVector StandardRewardModel<storm::storage::TriangularFuzzyNumber>::getChoicesWithFilter(
+    storm::storage::SparseMatrix<storm::storage::TriangularFuzzyNumber> const& transitionMatrix, std::function<bool(storm::storage::TriangularFuzzyNumber const&)> const& filter) const;
+template void StandardRewardModel<storm::storage::TriangularFuzzyNumber>::clearRewardAtState(uint_fast64_t state,
+                                                                               storm::storage::SparseMatrix<storm::storage::TriangularFuzzyNumber> const& transitionMatrix);
+template std::vector<storm::storage::TriangularFuzzyNumber> StandardRewardModel<storm::storage::TriangularFuzzyNumber>::getTotalActionRewardVector(
+    storm::storage::SparseMatrix<storm::storage::TriangularFuzzyNumber> const& transitionMatrix, std::vector<storm::storage::TriangularFuzzyNumber> const& stateRewardWeights) const;
+template storm::storage::TriangularFuzzyNumber StandardRewardModel<storm::storage::TriangularFuzzyNumber>::getStateActionAndTransitionReward(
+    uint_fast64_t stateIndex, storm::storage::SparseMatrix<storm::storage::TriangularFuzzyNumber> const& transitionMatrix) const;
+template storm::storage::TriangularFuzzyNumber StandardRewardModel<storm::storage::TriangularFuzzyNumber>::getTotalStateActionReward(
+    uint_fast64_t stateIndex, uint_fast64_t choiceIndex, storm::storage::SparseMatrix<storm::storage::TriangularFuzzyNumber> const& transitionMatrix,
+    storm::storage::TriangularFuzzyNumber const& stateRewardWeight, storm::storage::TriangularFuzzyNumber const& actionRewardWeight) const;
+template void StandardRewardModel<storm::storage::TriangularFuzzyNumber>::reduceToStateBasedRewards(
+    storm::storage::SparseMatrix<storm::storage::TriangularFuzzyNumber> const& transitionMatrix, bool reduceToStateRewards,
+    std::vector<storm::storage::TriangularFuzzyNumber> const* weights);
+template void StandardRewardModel<storm::storage::TriangularFuzzyNumber>::setStateActionReward(uint_fast64_t choiceIndex, storm::storage::TriangularFuzzyNumber const& newValue);
+template void StandardRewardModel<storm::storage::TriangularFuzzyNumber>::setStateReward(uint_fast64_t state, storm::storage::TriangularFuzzyNumber const& newValue);
+template class StandardRewardModel<storm::storage::TriangularFuzzyNumber>;
+template std::ostream& operator<< <storm::storage::TriangularFuzzyNumber>(std::ostream& out, StandardRewardModel<storm::storage::TriangularFuzzyNumber> const& rewardModel);
+
 }  // namespace sparse
 
 }  // namespace models
