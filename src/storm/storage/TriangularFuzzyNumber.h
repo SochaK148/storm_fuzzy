@@ -7,42 +7,41 @@
 namespace storm {
 namespace storage {
 class TriangularFuzzyNumber{
+    private:
+        double leftBound;
+        double peak;
+        double rightBound;
     public:
-        explicit TriangularFuzzyNumber(double v) : leftBound(v), peak(v), rightBound(v) {}
+        TriangularFuzzyNumber(double v) : leftBound(0), peak(v), rightBound(0) {} // crisp number
 
         TriangularFuzzyNumber() = default;
 
         TriangularFuzzyNumber(double lb, double p, double rb) : leftBound(lb), peak(p), rightBound(rb) {}
 
-        double getLeftBound() const {
-            return leftBound;
-        }
+        double getLeftBound() const;
 
-        double getPeak() const {
-            return peak;
-        }
+        double getPeak() const;
 
-        double getRightBound() const {
-            return rightBound;
-        }
+        double getRightBound() const;
 
-    private:
-        double leftBound;
-        double peak;
-        double rightBound;
+        void setLeftBound(double const& lb);
 
+        void setPeak(double const& p);
+
+        void setRightBound(double const& rb);
+
+        TriangularFuzzyNumber& operator += (const TriangularFuzzyNumber& j);
+        TriangularFuzzyNumber& operator *= (const TriangularFuzzyNumber& j);
+        TriangularFuzzyNumber& operator -= (const TriangularFuzzyNumber& j);
+        TriangularFuzzyNumber& operator /= (const TriangularFuzzyNumber& j);
 };
 
 std::ostream& operator<<(std::ostream& os, TriangularFuzzyNumber const& i);
 TriangularFuzzyNumber operator + (const TriangularFuzzyNumber& i, const TriangularFuzzyNumber& j);
-TriangularFuzzyNumber operator += (const TriangularFuzzyNumber& i, const TriangularFuzzyNumber& j);
 TriangularFuzzyNumber operator - (const TriangularFuzzyNumber& i);
 TriangularFuzzyNumber operator - (const TriangularFuzzyNumber& i, const TriangularFuzzyNumber& j);
 TriangularFuzzyNumber operator * (const TriangularFuzzyNumber& i, const TriangularFuzzyNumber& j);
-TriangularFuzzyNumber operator *= (const TriangularFuzzyNumber& i, const TriangularFuzzyNumber& j);
 TriangularFuzzyNumber operator / (const TriangularFuzzyNumber& i, const TriangularFuzzyNumber& j);
-TriangularFuzzyNumber operator -= (const TriangularFuzzyNumber& i, const TriangularFuzzyNumber& j);
-TriangularFuzzyNumber operator /= (const TriangularFuzzyNumber& i, const TriangularFuzzyNumber& j);
 bool operator > (const TriangularFuzzyNumber& i, const TriangularFuzzyNumber& j);
 bool operator < (const TriangularFuzzyNumber& i, const TriangularFuzzyNumber& j);
 bool operator == (const TriangularFuzzyNumber& i, const TriangularFuzzyNumber& j);
