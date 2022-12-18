@@ -2708,7 +2708,7 @@ template class SparseMatrix<TriangularFuzzyNumber>;
 template std::ostream& operator<<(std::ostream& out, SparseMatrix<TriangularFuzzyNumber> const& matrix);
 template bool SparseMatrix<TriangularFuzzyNumber>::isSubmatrixOf(SparseMatrix<TriangularFuzzyNumber> const& matrix) const;
 template storm::storage::TriangularFuzzyNumber SparseMatrix<storm::storage::TriangularFuzzyNumber>::getPointwiseProductRowSum(
-    storm::storage::SparseMatrix<storm::storage::TriangularFuzzyNumber> const& otherMatrix, unsigned long const& row) const;
+    storm::storage::SparseMatrix<storm::storage::TriangularFuzzyNumber> const& otherMatrix, typename SparseMatrix<storm::storage::TriangularFuzzyNumber>::index_type const& row) const;
 template std::vector<TriangularFuzzyNumber>  SparseMatrix<TriangularFuzzyNumber>::getPointwiseProductRowSumVector<storm::storage::TriangularFuzzyNumber, storm::storage::TriangularFuzzyNumber>(storm::storage::SparseMatrix<storm::storage::TriangularFuzzyNumber> const&) const;
 #endif
 

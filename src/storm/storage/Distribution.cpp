@@ -224,7 +224,7 @@ template class Distribution<storm::RationalFunction, uint_fast64_t>;
 template std::ostream& operator<<(std::ostream& out, Distribution<storm::RationalFunction, uint_fast64_t> const& distribution);
 #endif
 
-template class Distribution<storm::storage::TriangularFuzzyNumber, unsigned long>;
+template class Distribution<storm::storage::TriangularFuzzyNumber, uint_fast64_t>;
 
 }  // namespace storage
 }  // namespace storm
