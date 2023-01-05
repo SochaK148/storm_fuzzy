@@ -351,5 +351,8 @@ template class FlexibleSparseMatrix<storm::RationalFunction>;
 template std::ostream& operator<<(std::ostream& out, FlexibleSparseMatrix<storm::RationalFunction> const& matrix);
 #endif
 
+template class FlexibleSparseMatrix<storm::storage::TriangularFuzzyNumber>;
+template std::ostream& operator<<(std::ostream& out, FlexibleSparseMatrix<storm::storage::TriangularFuzzyNumber> const& matrix);
+
 }  // namespace storage
 }  // namespace storm
