@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <chrono>
 #include <iostream>
 #include <random>
 #include <vector>
@@ -24,13 +25,58 @@ int FuzzyAnalysisResult::member::getN() {
 std::pair<int, int> FuzzyAnalysisResult::member::getIdx() {
     return this->idx;
 }
-double& FuzzyAnalysisResult::member::getFitness() {
+bool FuzzyAnalysisResult::member::getReachability() {
+    return this->reachability;
+}
+double FuzzyAnalysisResult::member::getFitness() {
     return this->fitness;
 }
 void FuzzyAnalysisResult::member::updateFitness() {
-    this->fitness = matrixMul(matrix, n)[idx.first][idx.second];
+    if(this->reachability)
+        this->fitness = matrixMul(matrix, n)[idx.first][idx.second];
+    else
+        this->fitness = stationaryDistribution(matrix)[idx.second];
 }
-std::vector<std::vector<double>> FuzzyAnalysisResult::member::matrixMul(std::vector<std::vector<double>> matrix, int p) {
+
+std::vector<double> stationaryDistribution(std::vector<std::vector<double>> P)
+{
+    int n = P.size();
+    std::vector<double> w(n);
+    for (int i = 0; i < n; i++) {
+        w[i] = 1.0;
+    }
+
+    std::vector<double> prev_w(n);
+    double prev_diff = 0;
+    double diff = 1;
+    while (diff > 1e-8) {
+        prev_w = w;
+        for (int i = 0; i < n; i++) {
+            w[i] = 0;
+            for (int j = 0; j < n; j++) {
+                w[i] += prev_w[j] * P[j][i];
+            }
+        }
+
+        prev_diff = diff;
+        diff = 0;
+        for (int i = 0; i < n; i++) {
+            diff += abs(w[i] - prev_w[i]);
+        }
+    }
+
+    double sum = 0;
+    for (int i = 0; i < n; i++) {
+        sum += w[i];
+    }
+    for (int i = 0; i < n; i++) {
+        w[i] /= sum;
+    }
+
+    return w;
+}
+
+std::vector<std::vector<double>> matrixMul(std::vector<std::vector<double>> matrix, int p) {
     const int n = matrix.size();
     const int m = matrix[0].size();
     std::vector<std::vector<double>> result(n, std::vector<double>(m, 0));
@@ -50,6 +96,7 @@ std::vector<std::vector<double>> FuzzyAnalysisResult::member::matrixMul(std::vec
 
     return temp;
 }
+
 bool FuzzyAnalysisResult::member::operator<(const FuzzyAnalysisResult::member& other) const {
     return fitness < other.fitness;
 }
@@ -62,6 +109,149 @@ bool FuzzyAnalysisResult::member::operator==(FuzzyAnalysisResult::member& other)
 FlexibleSparseMatrix<TriangularFuzzyNumber>& FuzzyAnalysisResult::getMatrix() {
     return matrix;
 }
+
+bool FuzzyAnalysisResult::isRegular()
+{
+    std::vector<std::vector<double>> P = this->getCrispMatrix();
+    int n = P.size();
+
+    std::vector<int> reachable(n);
+    reachable[0] = 1;
+    for (int k = 0; k < n; k++)
+    {
+        std::vector<int> new_reachable(reachable);
+        for (int i = 0; i < n; i++)
+        {
+            if (reachable[i] == 1)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    if (P[i][j] > 0)
+                    {
+                        new_reachable[j] = 1;
+                    }
+                }
+            }
+        }
+        reachable = new_reachable;
+    }
+    bool irreducible = true;
+    for (int i = 0; i < n; i++)
+    {
+        if (reachable[i] == 0)
+        {
+            irreducible = false;
+            break;
+        }
+    }
+    if (!irreducible)
+        return false;
+
+    std::vector<int> d(n);
+    for (int i = 0; i < n; i++)
+    {
+        d[i] = 1;
+        for (int k = 1;; k++)
+        {
+            if (P[i][i] > 0)
+            {
+                d[i] = k;
+                break;
+            }
+            std::vector<double> p(n);
+            for (int j = 0; j < n; j++)
+            {
+                for (int l = 0; l < n; l++)
+                {
+                    p[j] += P[l][j] * P[i][l];
+                }
+            }
+            P[i] = p;
+        }
+    }
+    bool aperiodic = true;
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            if (std::__gcd(d[i], d[j]) != 1)
+            {
+                aperiodic = false;
+                break;
+            }
+        }
+        if (!aperiodic)
+            break;
+    }
+    if (!aperiodic)
+        return false;
+
+    return true;
+}
+
+bool FuzzyAnalysisResult::isAbsorbing()
+{
+    std::vector<std::vector<double>> P = this->getCrispMatrix();
+
+    int n = P.size();
+    int k = 0;
+    std::vector<int> absorbing_states;
+    for (int i = 0; i < n; i++)
+    {
+        if (P[i][i] == 1)
+        {
+            absorbing_states.push_back(i);
+            k++;
+        }
+    }
+    if (k == 0)
+    {
+        return false;
+    }
+
+    for (int i = 0; i < n; i++)
+    {
+        bool reachable = false;
+        for (int j = 0; j < absorbing_states.size(); j++)
+        {
+            if (i == absorbing_states[j])
+            {
+                reachable = true;
+                break;
+            }
+        }
+        if (!reachable)
+        {
+            std::vector<double> p(n);
+            for (int k = 0; k < n; k++)
+            {
+                p[k] = P[i][k];
+            }
+            for (int k = 0; k < n; k++)
+            {
+                for (int l = 0; l < n; l++)
+                {
+                    p[k] += P[i][l] * P[l][k];
+                }
+            }
+            for (int j = 0; j < absorbing_states.size(); j++)
+            {
+                if (p[absorbing_states[j]] > 0)
+                {
+                    reachable = true;
+                    break;
+                }
+            }
+            if (!reachable)
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 
 std::pair<std::vector<std::vector<Interval>>, std::vector<std::pair<int, int>>> FuzzyAnalysisResult::getIntervalMatrix(double alpha) {
     std::vector<std::vector<Interval>> intervalMatrix(this->getMatrix().getRowCount(), std::vector<Interval>(this->getMatrix().getColumnCount(), Interval(0)));
@@ -83,52 +273,111 @@ std::pair<std::vector<std::vector<Interval>>, std::vector<std::pair<int, int>>> 
     return std::pair(intervalMatrix, intervalIndices);
 }
 
+std::vector<std::vector<double>> FuzzyAnalysisResult::getCrispMatrix() {
+    std::vector<std::vector<double>> crispMatrix(this->getMatrix().getRowCount(), std::vector<double>(this->getMatrix().getColumnCount()));
+    
+    for (FlexibleSparseMatrix<TriangularFuzzyNumber>::index_type row = 0; row < this->getMatrix().getRowCount(); ++row) {
+        for (auto const element : this->getMatrix().getRow(row)) {
+            int column = element.getColumn();
+            TriangularFuzzyNumber value = element.getValue();
+            crispMatrix[row][column] = value.getPeak();
+        }
+    }
+
+    return crispMatrix;
+}
+
 Interval FuzzyAnalysisResult::getAlphaCut(TriangularFuzzyNumber const& t, double alpha) {
     double i = alpha * (t.getPeak() - t.getLeftBound()) + t.getLeftBound();
     double j = (1 - alpha) * (t.getRightBound() - t.getPeak()) + t.getPeak();
     return Interval(i, j);
 }
 
-void FuzzyAnalysisResult::reachableInSteps(std::pair<int, int> idx, int steps, int acc) {
+std::vector<std::pair<double, double>> FuzzyAnalysisResult::fuzzyGeneticAlgorithm(std::pair<int, int> idx, int steps, int acc, int populationSize, int threshold,
+                                                                             double selectionSample, double mutationRate, bool timeBased, bool reachability) {
+    std::vector<std::pair<double, double>> result;
     for (int i = 0; i < acc; i++) {
-        double alpha = i / acc;
+        double alpha = (double)i / (double)acc;
+        double left;
+        double right;
         std::cout << "alpha=" << alpha << " processing... " << std::endl;
         std::pair<std::vector<std::vector<Interval>>, std::vector<std::pair<int, int>>> matrixAndIndexes = this->getIntervalMatrix(alpha);
         std::vector<std::vector<Interval>> intervalMatrix = matrixAndIndexes.first;
         std::vector<std::pair<int, int>> intervalIndices = matrixAndIndexes.second;
-        double left = this->restrictedMatrixMul(intervalMatrix, intervalIndices, steps, idx, true);
-        std::cout << "alpha=" << alpha << ", left: " << left << std::endl;
-        double right = this->restrictedMatrixMul(intervalMatrix, intervalIndices, steps, idx, false);
-        std::cout << "alpha=" << alpha << ", right: " << right << std::endl;
+        if (timeBased) {
+            left = this->timeBasedMatrixMul(intervalMatrix, intervalIndices, steps, idx, true, populationSize, threshold, selectionSample, mutationRate);
+            std::cout << "alpha=" << alpha << ", left: " << left << std::endl;
+            right =  this->timeBasedMatrixMul(intervalMatrix, intervalIndices, steps, idx, false, populationSize, threshold, selectionSample, mutationRate);
+            std::cout << "alpha=" << alpha << ", right: " << right << std::endl;
+
+        } else {
+            left = this->restrictedMatrixMul(intervalMatrix, intervalIndices, steps, idx, true, populationSize, threshold, selectionSample, mutationRate);
+            std::cout << "alpha=" << alpha << ", left: " << left << std::endl;
+            right = this->restrictedMatrixMul(intervalMatrix, intervalIndices, steps, idx, false, populationSize, threshold, selectionSample, mutationRate);
+            std::cout << "alpha=" << alpha << ", right: " << right << std::endl;
+        }
+        result.push_back({left, alpha});
+        result.push_back({right, alpha});
     }
+    result.push_back({matrixMul(this->getCrispMatrix(), steps)[idx.first][idx.second], 1.0});
+    std::sort(result.begin(), result.end(), [](const std::pair<double, double> &a, const std::pair<double, double> &b) {
+        return a.first < b.first;
+    });
+    return result;
 }
 
 double FuzzyAnalysisResult::restrictedMatrixMul(std::vector<std::vector<Interval>> intervalMatrix, std::vector<std::pair<int, int>> intervalIndices, int steps,
-                                                std::pair<int, int> idx, bool isMin) {
-    int populationSize = 1000;
-    int generations = 100;
-    double selectionSample = 0.2;
-    double mutationRate = 0.01;
-
+                                                std::pair<int, int> idx, bool isMin, int populationSize, int generations, double selectionSample,
+                                                double mutationRate, bool reachability) {
     std::vector<int> intervalRowIndices;
     std::transform(intervalIndices.begin(), intervalIndices.end(), std::back_inserter(intervalRowIndices),
                    [](const std::pair<int, int>& p) { return p.first; });
-    std::vector<FuzzyAnalysisResult::member> population = this->initializePopulation(intervalMatrix, populationSize, steps, idx);
+    std::vector<FuzzyAnalysisResult::member> population = this->initializePopulation(intervalMatrix, populationSize, steps, idx, reachability);
+
     for (int i = 0; i < generations; i++) {
         std::cout << "Generation: " << i << std::endl;
         population =
             this->mutatePopulation(this->crossPopulation(this->selectPopulation(population, selectionSample, isMin), populationSize, intervalRowIndices),
                                    mutationRate, intervalIndices, intervalRowIndices, intervalMatrix);
     }
-    return population[0].getFitness();
+
+    population = this->selectPopulation(population, selectionSample, isMin);
+    if (isMin)
+        return population[0].getFitness();
+    return population[population.size() - 1].getFitness();
+}
+
+double FuzzyAnalysisResult::timeBasedMatrixMul(std::vector<std::vector<Interval>> intervalMatrix, std::vector<std::pair<int, int>> intervalIndices, int steps,
+                                               std::pair<int, int> idx, bool isMin, int populationSize, int milliseconds, double selectionSample,
+                                               double mutationRate, bool reachability) {
+    std::vector<int> intervalRowIndices;
+    std::transform(intervalIndices.begin(), intervalIndices.end(), std::back_inserter(intervalRowIndices),
+                   [](const std::pair<int, int>& p) { return p.first; });
+    std::vector<FuzzyAnalysisResult::member> population = this->initializePopulation(intervalMatrix, populationSize, steps, idx, reachability);
+    auto start = std::chrono::high_resolution_clock::now();
+    auto end = start + std::chrono::milliseconds(milliseconds);
+    int i = 0;
+    double current_result;
+    while (std::chrono::high_resolution_clock::now() < end) {
+        population = this->selectPopulation(population, selectionSample, isMin);
+        current_result = isMin ? population[0].getFitness() : population[population.size() - 1].getFitness();
+        population = this->mutatePopulation(this->crossPopulation(population, populationSize, intervalRowIndices), mutationRate, intervalIndices,
+                                            intervalRowIndices, intervalMatrix);
+        std::cout << "Generation: " << i++ << ", result: " << current_result << std::endl;
+    }
+
+    population = this->selectPopulation(population, selectionSample, isMin);
+    if (isMin)
+        return population[0].getFitness();
+    return population[population.size() - 1].getFitness();
 }
 
 std::vector<FuzzyAnalysisResult::member> FuzzyAnalysisResult::initializePopulation(std::vector<std::vector<Interval>> intervalMatrix, int populationSize,
-                                                                                   int steps, std::pair<int, int> idx) {
+                                                                                   int steps, std::pair<int, int> idx, bool reachability) {
     std::vector<FuzzyAnalysisResult::member> population;
     for (int i = 0; i < populationSize; i++) {
         std::vector<std::vector<double>> r = this->randomCrisp(intervalMatrix);
-        member m(r, steps, idx);
+        member m(r, steps, idx, reachability);
         population.push_back(m);
     }
     return population;
@@ -136,29 +385,52 @@ std::vector<FuzzyAnalysisResult::member> FuzzyAnalysisResult::initializePopulati
 
 double randomDouble(double min, double max) {
     std::uniform_real_distribution<double> unif(min, max);
-    std::default_random_engine re;
+    std::random_device rd;
+    std::default_random_engine re(rd());
     return unif(re);
 }
 
 std::vector<std::vector<double>> FuzzyAnalysisResult::randomCrisp(std::vector<std::vector<Interval>> intervalMatrix) {
     int rows = intervalMatrix.size();
     int columns = intervalMatrix[0].size();
-    std::vector<std::vector<double>> r(rows, std::vector<double>(columns));
+    std::vector<std::vector<double>> crispMatrix;
     for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < columns; j++) {
-            if (intervalMatrix[i][j].isPointInterval()) {
-                r[i][j] = intervalMatrix[i][j].lower();
+        std::vector<double> ranges_lengths;
+        std::vector<double> random_values;
+        for (auto r : intervalMatrix[i]) {
+            double random_value;
+            ranges_lengths.push_back(r.upper() - r.lower());
+            random_value = randomDouble(r.lower(), r.upper());
+            random_values.push_back(random_value);
+        }
+        double difference = 1.0 - std::accumulate(random_values.begin(), random_values.end(), 0.0);
+        if (difference != 0.0) {
+            std::vector<double> margins;
+            std::vector<double> distributed_corrections;
+            if (difference > 0.0) {
+                for (int j = 0; j < random_values.size(); j++) {
+                    margins.push_back(intervalMatrix[i][j].upper() - random_values[j]);
+                }
             } else {
-                r[i][j] = randomDouble(intervalMatrix[i][j].lower(), intervalMatrix[i][j].upper());
+                for (int j = 0; j < random_values.size(); j++) {
+                    margins.push_back(random_values[j] - intervalMatrix[i][j].lower());
+                }
+            }
+            double margin_sum = std::accumulate(margins.begin(), margins.end(), 0.0);
+            for (int j = 0; j < margins.size(); j++) {
+                distributed_corrections.push_back(difference * (margins[j] / margin_sum));
+                random_values[j] += distributed_corrections[j];
             }
         }
+        crispMatrix.push_back(random_values);
     }
-    return r;
+    return crispMatrix;
 }
 
 std::vector<FuzzyAnalysisResult::member> FuzzyAnalysisResult::selectPopulation(std::vector<FuzzyAnalysisResult::member> population, double selectionSample,
                                                                                bool isMin) {
-    for (auto m : population) {
+    std::cout << std::fixed;
+    for (auto& m : population) {
         m.updateFitness();
     }
     std::sort(population.begin(), population.end());
@@ -166,18 +438,19 @@ std::vector<FuzzyAnalysisResult::member> FuzzyAnalysisResult::selectPopulation(s
     std::vector<FuzzyAnalysisResult::member> selected;
     if (isMin) {
         selected.insert(selected.begin(), population.begin(), population.begin() + n);
+        // std::cout << "Best: " << selected[0].getFitness() << std::endl;
     } else {
         selected.insert(selected.begin(), population.end() - n, population.end());
+        // std::cout << "Bes: " << selected[n - 1].getFitness() << std::endl;
     }
-    std::cout << "Best 3: " << selected[0].getFitness() << ", " << selected[1].getFitness() << selected[2].getFitness() << std::endl;
     return selected;
 }
 
 int randomElement(std::vector<FuzzyAnalysisResult::member> population) {
     std::random_device rd;
-    std::mt19937 gen(rd());
+    std::default_random_engine re(rd());
     std::uniform_int_distribution<> distr(0, population.size() - 1);
-    return distr(gen);
+    return distr(re);
 }
 
 std::vector<FuzzyAnalysisResult::member> FuzzyAnalysisResult::crossPopulation(std::vector<FuzzyAnalysisResult::member> population, int populationSize,
@@ -197,19 +470,17 @@ std::vector<FuzzyAnalysisResult::member> FuzzyAnalysisResult::crossPopulation(st
 
 int randomIntFromList(std::vector<int> rows) {
     std::random_device rd;
-    std::mt19937 gen(rd());
+    std::default_random_engine re(rd());
     std::uniform_int_distribution<> distr(0, rows.size() - 1);
-    // std::uniform_int_distribution<> unif(0,rows.size());
-    // std::default_random_engine re;
-    int result = distr(gen);
+    int result = distr(re);
     return rows[result];
 }
 
 std::vector<int> randomAmountOfRandomRows(std::vector<int> rows) {
     std::random_device rd;
-    std::mt19937 gen(rd());
+    std::default_random_engine re(rd());
     std::uniform_int_distribution<> distr(0, rows.size() - 1);
-    int amount = distr(gen);
+    int amount = distr(re);
     std::vector<int> randomRows;
     for (int i = 0; i < amount; i++) {
         int row = randomIntFromList(rows);
@@ -223,8 +494,8 @@ std::vector<int> randomAmountOfRandomRows(std::vector<int> rows) {
 std::vector<FuzzyAnalysisResult::member> FuzzyAnalysisResult::crossParents(FuzzyAnalysisResult::member q1, FuzzyAnalysisResult::member q2,
                                                                            std::vector<int> intervalRowIndices) {
     std::vector<int> randomRows = randomAmountOfRandomRows(intervalRowIndices);
-    FuzzyAnalysisResult::member c1 = member(q1.getMatrix(), q1.getN(), q1.getIdx());
-    FuzzyAnalysisResult::member c2 = member(q2.getMatrix(), q2.getN(), q2.getIdx());
+    FuzzyAnalysisResult::member c1 = member(q1.getMatrix(), q1.getN(), q1.getIdx(), q1.getReachability());
+    FuzzyAnalysisResult::member c2 = member(q2.getMatrix(), q2.getN(), q2.getIdx(), q2.getReachability());
     for (auto const randomRow : randomRows) {
         std::vector<std::vector<double>> c1New = c1.getMatrix();
         c1New[randomRow] = q2.getMatrix()[randomRow];
@@ -237,9 +508,9 @@ std::vector<FuzzyAnalysisResult::member> FuzzyAnalysisResult::crossParents(Fuzzy
     return {c1, c2};
 }
 
-Interval getFeasibleMutationRange(int mutationValue1, int mutationValue2, Interval mutationRange1, Interval mutationRange2) {
-    int left = std::min(mutationValue1 - mutationRange1.lower(), mutationRange2.upper() - mutationValue2);
-    int right = std::min(mutationRange1.upper() - mutationValue1, mutationValue2 - mutationRange2.lower());
+Interval getFeasibleMutationRange(double mutationValue1, double mutationValue2, Interval mutationRange1, Interval mutationRange2) {
+    double left = std::min(mutationValue1 - mutationRange1.lower(), mutationRange2.upper() - mutationValue2);
+    double right = std::min(mutationRange1.upper() - mutationValue1, mutationValue2 - mutationRange2.lower());
     return Interval(-left, right);
 }
 
@@ -254,19 +525,17 @@ FuzzyAnalysisResult::member mutateMember(FuzzyAnalysisResult::member member, std
     }
 
     std::random_device rd;
-    std::mt19937 gen(rd());
+    std::default_random_engine re(rd());
     std::uniform_int_distribution<> distr(0, elementsInRandomRow.size() - 1);
-    // std::uniform_int_distribution<> unif(0,elementsInRandomRow.size());
-    // std::default_random_engine re;
-    int toMutate1 = elementsInRandomRow[distr(gen)];
+    int toMutate1 = elementsInRandomRow[distr(re)];
     int toMutate2 = toMutate1;
     while (toMutate1 == toMutate2) {
-        toMutate2 = elementsInRandomRow[distr(gen)];
+        toMutate2 = elementsInRandomRow[distr(re)];
     }
 
     std::vector<std::vector<double>> mutableMatrix = member.getMatrix();
-    int mutationValue1 = mutableMatrix[row][toMutate1];
-    int mutationValue2 = mutableMatrix[row][toMutate2];
+    double mutationValue1 = mutableMatrix[row][toMutate1];
+    double mutationValue2 = mutableMatrix[row][toMutate2];
     Interval mutationRange1 = intervalMatrix[row][toMutate1];
     Interval mutationRange2 = intervalMatrix[row][toMutate2];
 
@@ -286,11 +555,11 @@ std::vector<FuzzyAnalysisResult::member> FuzzyAnalysisResult::mutatePopulation(s
                                                                                std::vector<std::vector<Interval>> intervalMatrix) {
     int amount = mutationRate * population.size();
     std::random_device rd;
-    std::mt19937 gen(rd());
+    std::default_random_engine re(rd());
 
     std::vector<int> indices(population.size());
     std::iota(indices.begin(), indices.end(), 0);
-    std::shuffle(indices.begin(), indices.end(), gen);
+    std::shuffle(indices.begin(), indices.end(), re);
 
     for (int i = 0; i < amount; i++) {
         int index = indices[i];
