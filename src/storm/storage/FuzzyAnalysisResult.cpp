@@ -368,11 +368,6 @@ double FuzzyAnalysisResult::timeBasedMatrixMul(std::vector<std::vector<Interval>
                                                std::pair<int, int> idx, bool isMin, int populationSize, int milliseconds, double selectionSample,
                                                double mutationRate, bool reachability, int mutationRows) {
 
-    std::ofstream log_file;
-    std::string file_name = "time-results-5.txt";
-    log_file.open(file_name, std::ofstream::out | std::ofstream::app);
-    log_file << std::fixed << std::setprecision(10);
-
     std::vector<int> intervalRowIndices;
     std::transform(intervalIndices.begin(), intervalIndices.end(), std::back_inserter(intervalRowIndices),
                    [](const std::pair<int, int>& p) { return p.first; });
@@ -393,7 +388,6 @@ double FuzzyAnalysisResult::timeBasedMatrixMul(std::vector<std::vector<Interval>
         now = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - start);
         std::cout << "Generation: " << i++ << ", result: " << current_result << ", time: " << duration.count() << std::endl;
-        log_file << "Generation: " << i++ << ", result: " << current_result << ", time: " << duration.count() << std::endl;
     }
 
     population = this->selectPopulation(population, selectionSample, isMin);
