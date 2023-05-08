@@ -3,6 +3,7 @@
 #include <iostream>
 #include <random>
 #include <vector>
+#include <thread>
 
 #include "storm/storage/FuzzyAnalysisResult.h"
 #include "storm/storage/SparseMatrix.h"
@@ -10,6 +11,19 @@
 
 namespace storm {
 namespace storage {
+
+void print2DVector(const std::vector<std::vector<double>> &vec)
+{
+    for (const auto &row : vec)
+    {
+        for (const auto &element : row)
+        {
+            std::cout << element << " ";
+        }
+        std::cout << std::endl;
+    }
+    std::cout << std::endl;
+}
 
 // Member
 
@@ -332,6 +346,9 @@ double FuzzyAnalysisResult::restrictedMatrixMul(std::vector<std::vector<Interval
     std::vector<int> intervalRowIndices;
     std::transform(intervalIndices.begin(), intervalIndices.end(), std::back_inserter(intervalRowIndices),
                    [](const std::pair<int, int>& p) { return p.first; });
+    std::sort(intervalRowIndices.begin(), intervalRowIndices.end());
+    auto last = std::unique(intervalRowIndices.begin(), intervalRowIndices.end());
+    intervalRowIndices.erase(last, intervalRowIndices.end());
     std::vector<FuzzyAnalysisResult::member> population = this->initializePopulation(intervalMatrix, populationSize, steps, idx, reachability);
 
     for (int i = 0; i < generations; i++) {
@@ -349,26 +366,44 @@ double FuzzyAnalysisResult::restrictedMatrixMul(std::vector<std::vector<Interval
 
 double FuzzyAnalysisResult::timeBasedMatrixMul(std::vector<std::vector<Interval>> intervalMatrix, std::vector<std::pair<int, int>> intervalIndices, int steps,
                                                std::pair<int, int> idx, bool isMin, int populationSize, int milliseconds, double selectionSample,
-                                               double mutationRate, bool reachability) {
+                                               double mutationRate, bool reachability, int mutationRows) {
+
+    std::ofstream log_file;
+    std::string file_name = "time-results-5.txt";
+    log_file.open(file_name, std::ofstream::out | std::ofstream::app);
+    log_file << std::fixed << std::setprecision(10);
+
     std::vector<int> intervalRowIndices;
     std::transform(intervalIndices.begin(), intervalIndices.end(), std::back_inserter(intervalRowIndices),
                    [](const std::pair<int, int>& p) { return p.first; });
+    std::sort(intervalRowIndices.begin(), intervalRowIndices.end());
+    auto last = std::unique(intervalRowIndices.begin(), intervalRowIndices.end());
+    intervalRowIndices.erase(last, intervalRowIndices.end());
     std::vector<FuzzyAnalysisResult::member> population = this->initializePopulation(intervalMatrix, populationSize, steps, idx, reachability);
     auto start = std::chrono::high_resolution_clock::now();
     auto end = start + std::chrono::milliseconds(milliseconds);
     int i = 0;
     double current_result;
-    while (std::chrono::high_resolution_clock::now() < end) {
+    auto now = std::chrono::high_resolution_clock::now();
+    while (now < end) {
         population = this->selectPopulation(population, selectionSample, isMin);
         current_result = isMin ? population[0].getFitness() : population[population.size() - 1].getFitness();
         population = this->mutatePopulation(this->crossPopulation(population, populationSize, intervalRowIndices), mutationRate, intervalIndices,
-                                            intervalRowIndices, intervalMatrix);
-        std::cout << "Generation: " << i++ << ", result: " << current_result << std::endl;
+                                            intervalRowIndices, intervalMatrix, mutationRows);
+        now = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - start);
+        std::cout << "Generation: " << i++ << ", result: " << current_result << ", time: " << duration.count() << std::endl;
+        log_file << "Generation: " << i++ << ", result: " << current_result << ", time: " << duration.count() << std::endl;
     }
 
     population = this->selectPopulation(population, selectionSample, isMin);
-    if (isMin)
+    if (isMin){
+        //print2DVector(population[0].getMatrix());
+        std::this_thread::sleep_for(std::chrono::milliseconds(5000));
         return population[0].getFitness();
+    }
+    //print2DVector(population[population.size() - 1].getMatrix());
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
     return population[population.size() - 1].getFitness();
 }
 
@@ -436,13 +471,13 @@ std::vector<FuzzyAnalysisResult::member> FuzzyAnalysisResult::selectPopulation(s
     std::sort(population.begin(), population.end());
     int n = population.size() * selectionSample;
     std::vector<FuzzyAnalysisResult::member> selected;
+
     if (isMin) {
         selected.insert(selected.begin(), population.begin(), population.begin() + n);
-        // std::cout << "Best: " << selected[0].getFitness() << std::endl;
     } else {
         selected.insert(selected.begin(), population.end() - n, population.end());
-        // std::cout << "Bes: " << selected[n - 1].getFitness() << std::endl;
     }
+
     return selected;
 }
 
@@ -491,6 +526,17 @@ std::vector<int> randomAmountOfRandomRows(std::vector<int> rows) {
     return randomRows;
 }
 
+std::vector<int> fixedAmountOfRandomRows(std::vector<int> rows, int amount) {
+    std::vector<int> randomRows;
+    for (int i = 0; i < amount; i++) {
+        int row = randomIntFromList(rows);
+        randomRows.push_back(row);
+        auto it = std::find(rows.begin(), rows.end(), row);
+        rows.erase(it);
+    }
+    return randomRows;
+}
+
 std::vector<FuzzyAnalysisResult::member> FuzzyAnalysisResult::crossParents(FuzzyAnalysisResult::member q1, FuzzyAnalysisResult::member q2,
                                                                            std::vector<int> intervalRowIndices) {
     std::vector<int> randomRows = randomAmountOfRandomRows(intervalRowIndices);
@@ -515,44 +561,49 @@ Interval getFeasibleMutationRange(double mutationValue1, double mutationValue2, 
 }
 
 FuzzyAnalysisResult::member mutateMember(FuzzyAnalysisResult::member member, std::vector<std::pair<int, int>> intervalIndices,
-                                         std::vector<int> intervalRowIndices, std::vector<std::vector<Interval>> intervalMatrix) {
-    int row = randomIntFromList(intervalRowIndices);
-    std::vector<int> elementsInRandomRow;
-    for (auto const intervalIndex : intervalIndices) {
-        if (intervalIndex.first == row) {
-            elementsInRandomRow.push_back(intervalIndex.second);
+                                         std::vector<int> intervalRowIndices, std::vector<std::vector<Interval>> intervalMatrix, int mutationRows) {
+    
+    std::vector<int> rowsToMutate = fixedAmountOfRandomRows(intervalRowIndices, mutationRows);
+
+    for(int i = 0; i < rowsToMutate.size(); i++)
+    {
+        int row = rowsToMutate[i];
+        std::vector<int> elementsInRandomRow;
+        for (auto const intervalIndex : intervalIndices) {
+            if (intervalIndex.first == row) {
+                elementsInRandomRow.push_back(intervalIndex.second);
+            }
         }
+
+        std::random_device rd;
+        std::default_random_engine re(rd());
+        std::uniform_int_distribution<> distr(0, elementsInRandomRow.size() - 1);
+        int toMutate1 = elementsInRandomRow[distr(re)];
+        int toMutate2 = toMutate1;
+        while (toMutate1 == toMutate2) {
+            toMutate2 = elementsInRandomRow[distr(re)];
+        }
+
+        std::vector<std::vector<double>> mutableMatrix = member.getMatrix();
+        double mutationValue1 = mutableMatrix[row][toMutate1];
+        double mutationValue2 = mutableMatrix[row][toMutate2];
+        Interval mutationRange1 = intervalMatrix[row][toMutate1];
+        Interval mutationRange2 = intervalMatrix[row][toMutate2];
+
+        Interval feasibleMutationRange = getFeasibleMutationRange(mutationValue1, mutationValue2, mutationRange1, mutationRange2);
+        double mutationOffset = randomDouble(feasibleMutationRange.lower(), feasibleMutationRange.upper());
+
+        mutableMatrix[row][toMutate1] += mutationOffset;
+        mutableMatrix[row][toMutate2] -= mutationOffset;
+        member.setMatrix(mutableMatrix);
     }
-
-    std::random_device rd;
-    std::default_random_engine re(rd());
-    std::uniform_int_distribution<> distr(0, elementsInRandomRow.size() - 1);
-    int toMutate1 = elementsInRandomRow[distr(re)];
-    int toMutate2 = toMutate1;
-    while (toMutate1 == toMutate2) {
-        toMutate2 = elementsInRandomRow[distr(re)];
-    }
-
-    std::vector<std::vector<double>> mutableMatrix = member.getMatrix();
-    double mutationValue1 = mutableMatrix[row][toMutate1];
-    double mutationValue2 = mutableMatrix[row][toMutate2];
-    Interval mutationRange1 = intervalMatrix[row][toMutate1];
-    Interval mutationRange2 = intervalMatrix[row][toMutate2];
-
-    Interval feasibleMutationRange = getFeasibleMutationRange(mutationValue1, mutationValue2, mutationRange1, mutationRange2);
-    double mutationOffset = randomDouble(feasibleMutationRange.lower(), feasibleMutationRange.upper());
-
-    mutableMatrix[row][toMutate1] += mutationOffset;
-    mutableMatrix[row][toMutate2] -= mutationOffset;
-    member.setMatrix(mutableMatrix);
-
     return member;
 }
 
 std::vector<FuzzyAnalysisResult::member> FuzzyAnalysisResult::mutatePopulation(std::vector<FuzzyAnalysisResult::member> population, double mutationRate,
                                                                                std::vector<std::pair<int, int>> intervalIndices,
                                                                                std::vector<int> intervalRowIndices,
-                                                                               std::vector<std::vector<Interval>> intervalMatrix) {
+                                                                               std::vector<std::vector<Interval>> intervalMatrix, int mutationRows) {
     int amount = mutationRate * population.size();
     std::random_device rd;
     std::default_random_engine re(rd());
@@ -563,7 +614,7 @@ std::vector<FuzzyAnalysisResult::member> FuzzyAnalysisResult::mutatePopulation(s
 
     for (int i = 0; i < amount; i++) {
         int index = indices[i];
-        population[index] = mutateMember(population[index], intervalIndices, intervalRowIndices, intervalMatrix);
+        population[index] = mutateMember(population[index], intervalIndices, intervalRowIndices, intervalMatrix, mutationRows);
     }
 
     return population;

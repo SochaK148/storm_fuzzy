@@ -50,14 +50,14 @@ class FuzzyAnalysisResult {
                                std::pair<int, int> idx, bool isMin, int populationSize = 1000, int generations = 100, double selectionSample = 0.2,
                                double mutationRate = 0.01, bool reachability = true);
     double timeBasedMatrixMul(std::vector<std::vector<Interval>> intervalMatrix, std::vector<std::pair<int, int>> intervalIndices, int steps,
-                              std::pair<int, int> idx, bool isMin, int populationSize, int milliseconds, double selectionSample, double mutationRate, bool reachability = true);
+                              std::pair<int, int> idx, bool isMin, int populationSize, int milliseconds, double selectionSample, double mutationRate, bool reachability = true, int mutationRows = 1);
     std::vector<member> initializePopulation(std::vector<std::vector<Interval>> intervalMatrix, int populationSize, int steps, std::pair<int, int> idx, bool reachability = true);
     std::vector<FuzzyAnalysisResult::member> selectPopulation(std::vector<FuzzyAnalysisResult::member> population, double selectionSample, bool isMin);
     std::vector<FuzzyAnalysisResult::member> crossPopulation(std::vector<FuzzyAnalysisResult::member> population, int populationSize,
                                                              std::vector<int> intervalRowIndices);
     std::vector<FuzzyAnalysisResult::member> mutatePopulation(std::vector<FuzzyAnalysisResult::member> population, double mutationRate,
                                                               std::vector<std::pair<int, int>> intervalIndices, std::vector<int> intervalRowIndices,
-                                                              std::vector<std::vector<Interval>> intervalMatrix);
+                                                              std::vector<std::vector<Interval>> intervalMatrix, int mutationRows = 1);
     std::vector<FuzzyAnalysisResult::member> crossParents(FuzzyAnalysisResult::member q1, FuzzyAnalysisResult::member q2, std::vector<int> intervalRowIndices);
 
     // bool isFeasible(std::vector<std::vector<double>> const& m, double alpha);
@@ -69,7 +69,7 @@ int randomIntFromList(std::vector<int> rows);
 std::vector<std::vector<double>> matrixMul(std::vector<std::vector<double>> matrix, int n);
 std::vector<int> randomAmountOfRandomRows(std::vector<int> rows);
 FuzzyAnalysisResult::member mutateMember(FuzzyAnalysisResult::member member, std::vector<std::pair<int, int>> intervalIndices,
-                                         std::vector<int> intervalRowIndices, std::vector<std::vector<Interval>> intervalMatrix);
+                                         std::vector<int> intervalRowIndices, std::vector<std::vector<Interval>> intervalMatrix, int mutationRows = 1);
 std::vector<double> stationaryDistribution(std::vector<std::vector<double>> P);
 }  // namespace storage
 }  // namespace storm
